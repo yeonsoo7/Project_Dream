@@ -1,90 +1,103 @@
-import argparse, os, sys
+import argparse, json
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
+from datasets import Dataset
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments
+import torch
 from sklearn.metrics import f1_score
 
-print("[FACETS] import transformers/datasets ...")
-from datasets import Dataset
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer
-
-FACETS = ["aggression","conflict","friendliness","sexuality","success","misfortune"]
-
-def compute_metrics(eval_pred):
-    logits, labels = eval_pred
-    probs = 1/(1+np.exp(-logits))
-    preds = (probs >= 0.5).astype(int)
-    return {
-        "f1_micro": f1_score(labels, preds, average="micro", zero_division=0),
-        "f1_macro": f1_score(labels, preds, average="macro", zero_division=0),
-    }
+ALL_FACETS = ["aggression","conflict","friendliness","sexuality","success","misfortune"]
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--data", default="ml/data/facets.csv")
-    ap.add_argument("--model-name", default="distilbert-base-uncased")
+    ap.add_argument("--data", required=True)
+    ap.add_argument("--model-name", default="roberta-base")
     ap.add_argument("--outdir", default="ml/outputs/facets_model")
-    ap.add_argument("--epochs", type=int, default=4)
-    ap.add_argument("--batch-size", type:int, default=16)
+    ap.add_argument("--epochs", type=int, default=3)
+    ap.add_argument("--batch-size", type=int, default=16)
     args = ap.parse_args()
 
-    print(f"[FACETS] args={args}")
-    if not os.path.exists(args.data):
-        print(f"[FACETS][ERR] data not found: {args.data}", file=sys.stderr); sys.exit(2)
+    df = pd.read_csv(args.data)
+    # 1) 활성 레이블만 사용
+    pos_counts = {c: int(df[c].sum()) if c in df.columns else 0 for c in ALL_FACETS}
+    ACTIVE_LABELS = [c for c, n in pos_counts.items() if n > 0]
+    if not ACTIVE_LABELS:
+        raise RuntimeError("No positive labels found in any facet. Check your dataset.")
+    print("[FACETS] positive counts:", pos_counts)
+    print("[FACETS] ACTIVE_LABELS:", ACTIVE_LABELS)
 
-    df = pd.read_csv(args.data).dropna(subset=["text"]).reset_index(drop=True)
-    for c in FACETS:
-        if c not in df.columns:
-            df[c] = 0
-        df[c] = df[c].astype(int)
-    print(f"[FACETS] data shape={df.shape}")
+    dataset = Dataset.from_pandas(df)
+    tokenizer = AutoTokenizer.from_pretrained(args.model_name)
 
-    train_df, eval_df = train_test_split(df, test_size=0.1, random_state=42)
+    def preprocess(example):
+        out = tokenizer(example["text"], truncation=True, padding="max_length", max_length=128)
+        out["labels"] = [float(example[c]) for c in ACTIVE_LABELS]
+        return out
 
-    tok = AutoTokenizer.from_pretrained(args.model_name)
-    def tokenize(ex): return tok(ex["text"], truncation=True, max_length=512)
-
-    cols = ["text"] + FACETS
-    train_ds = Dataset.from_pandas(train_df[cols]).map(tokenize, batched=True)
-    eval_ds  = Dataset.from_pandas(eval_df[cols]).map(tokenize, batched=True)
-    print(f"[FACETS] ds sizes: train={len(train_ds)} eval={len(eval_ds)}")
+    dataset = dataset.map(preprocess)
+    dataset = dataset.remove_columns([c for c in dataset.column_names if c not in ["input_ids","attention_mask","labels"]])
+    dataset = dataset.train_test_split(test_size=0.1, seed=42)
+    print("[FACETS] ds sizes: train=", len(dataset["train"]), "eval=", len(dataset["test"]))
 
     model = AutoModelForSequenceClassification.from_pretrained(
-        args.model_name, num_labels=len(FACETS), problem_type="multi_label_classification"
-    )
-
-    training_args = TrainingArguments(
-        output_dir=args.outdir,
-        learning_rate=3e-5,
-        per_device_train_batch_size=args.batch_size,
-        per_device_eval_batch_size=args.batch_size,
-        num_train_epochs=args.epochs,
-        logging_steps=25,
-        report_to=[] if "report_to" in TrainingArguments.__init__.__code__.co_varnames else None,
+        args.model_name,
+        num_labels=len(ACTIVE_LABELS),
+        problem_type="multi_label_classification",
     )
 
     def collator(features):
-        batch = {k: [f[k] for f in features] for k in features[0].keys()}
-        labels = np.array([[f[c] for c in FACETS] for f in features], dtype=np.float32)
-        batch["labels"] = labels
-        return tok.pad(batch, return_tensors="pt")
+        batch = tokenizer.pad([{k: v for k, v in f.items() if k != "labels"} for f in features], return_tensors="pt")
+        batch["labels"] = torch.tensor([f["labels"] for f in features], dtype=torch.float32)
+        return batch
 
-    print("[FACETS] start training ...")
+    def compute_metrics(pred):
+        probs = torch.sigmoid(torch.tensor(pred.predictions))
+        preds = (probs > 0.5).int().numpy()
+        labels = pred.label_ids
+        per_f1 = []
+        for i in range(len(ACTIVE_LABELS)):
+            per_f1.append(f1_score(labels[:, i], preds[:, i], zero_division=0))
+        return {"f1_macro": float(np.mean(per_f1))}
+
+    training_args = TrainingArguments(
+        output_dir=args.outdir,
+        evaluation_strategy="epoch",
+        save_strategy="epoch",
+        num_train_epochs=args.epochs,
+        per_device_train_batch_size=args.batch_size,
+        per_device_eval_batch_size=args.batch_size,
+        load_best_model_at_end=True,
+        metric_for_best_model="f1_macro",
+        report_to="none",
+        logging_steps=50,
+        learning_rate=2e-5,
+        weight_decay=0.01,
+        fp16=True,  # GPU에서 더 빠르게 (CUDA일 때만 적용)
+    )
+
     trainer = Trainer(
-        model=model, args=training_args,
-        train_dataset=train_ds, eval_dataset=eval_ds,
-        tokenizer=tok, data_collator=collator,
+        model=model,
+        args=training_args,
+        train_dataset=dataset["train"],
+        eval_dataset=dataset["test"],
+        tokenizer=tokenizer,
+        data_collator=collator,
         compute_metrics=compute_metrics,
     )
-    trainer.train()
 
-    print("[FACETS] manual evaluate ...")
+    print("[FACETS] start training ...")
+    trainer.train()
     metrics = trainer.evaluate()
     print("[FACETS] eval metrics:", metrics)
 
-    print("[FACETS] saving ...")
-    trainer.save_model(args.outdir); tok.save_pretrained(args.outdir)
-    print(f"[FACETS] saved to {args.outdir}")
+    # 2) 라벨 목록 저장 (추론 시 맵핑에 사용)
+    import os
+    os.makedirs(args.outdir, exist_ok=True)
+    with open(f"{args.outdir}/labels.json", "w", encoding="utf-8") as f:
+        json.dump({"labels": ACTIVE_LABELS}, f, ensure_ascii=False, indent=2)
+
+    trainer.save_model(args.outdir)
+    print("[FACETS] saved to", args.outdir)
 
 if __name__ == "__main__":
     main()

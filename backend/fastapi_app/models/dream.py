@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, JSON, ForeignKey, Float, func
 from sqlalchemy.orm import relationship
 from datetime import datetime
-
+from sqlalchemy.sql import func
 from fastapi_app.db.database import Base
 
 class Dream(Base):
@@ -36,8 +36,8 @@ class DreamAnalysis(Base):
     neg_prob = Column(Float, nullable=False)
 
     # 세부 요소 및 노트
-    facets_json = Column(JSON, nullable=False, default={})
-    notes_json = Column(JSON, nullable=False, default=[])
+    facets_json = Column(JSON, nullable=False, default=dict)
+    notes_json = Column(JSON, nullable=False, default=list)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 

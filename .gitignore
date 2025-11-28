@@ -1,8 +1,38 @@
 # 환경
 venv/ 
+.venv/
 __pycache__/
 *.pyc 
 .env
 
 # IDE
 .vscode/
+generated/*
+
+
+.db
+
+# HuggingFace 캐시 (모델, 토크나이저)
+backend/.hf_cache/
+backend/fastapi_app/.hf_cache/
+.hf_cache/
+
+# 임시/생성 데이터, 체크포인트, 임베딩
+backend/fastapi_app/ml_artifacts/data/processed/
+backend/fastapi_app/ml_artifacts/data/rsos_dream_data.tsv
+backend/fastapi_app/ml_artifacts/data/*.pt
+backend/fastapi_app/ml_artifacts/*.pt
+backend/fastapi_app/ml_artifacts/facets/
+backend/fastapi_app/ml_artifacts/valence/
+*.pt
+*.bin
+*.safetensors
+
+
+# ---- Generated images ----
+backend/generated/
+generated/
+
+# ---- Local DB files ----
+backend/app.db
+backend/fastapi_app/app.db

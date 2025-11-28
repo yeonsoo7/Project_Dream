@@ -28,3 +28,25 @@ class DreamAnalyzeRes(BaseModel):
     nlg_notes: List[str]
     dream_id: Optional[int] = None
     saved_analysis_id: Optional[int] = None
+
+class CalendarDayEmotion(BaseModel):
+    date: str                  # "YYYY-MM-DD"
+    avg_positive: float        # 0~1
+    avg_negative: float
+    score: float               # 0~1, 캘린더 색에 바로 쓰기 (0=빨강, 1=초록)
+    label: str                 # "positive" / "negative" / "mixed" / "neutral"
+    dream_count: int
+
+class DreamDetail(BaseModel):
+    id: int
+    date: Optional[str]
+    text: str
+    emotion: Optional[str]
+    interpretation: Optional[str]
+    images: List[str]                 # 이미지 URL 리스트
+    valence: Dict[str, float]        # {"positive": ..., "negative": ...}
+    facets: Dict[str, float]
+    nlg_notes: List[str]
+
+    class Config:
+        from_attributes = True
