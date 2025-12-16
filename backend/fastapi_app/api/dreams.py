@@ -11,6 +11,8 @@ from fastapi_app.services.dream_counselor import counseling_note
 from fastapi_app.models.dream import Dream, DreamAnalysis
 from fastapi_app.models.image import Image
 from fastapi_app.schemas.dream import DreamAnalyzeRes, CalendarDayEmotion, DreamDetail
+from fastapi_app.services.dream_analyzer import analyze_dream_with_e5
+
 
 router = APIRouter(tags=["dreams"])
 
@@ -47,7 +49,12 @@ def analyze(req: AnalyzeReq, db: Session = Depends(get_db)):
 
     res["dream_id"] = dream.id
     res["saved_analysis_id"] = analysis.id
-    res["counseling_note"] = counseling_note(req.text, res["valence"], res["facets"])
+    res["counseling_note"] = counseling_note(
+        req.text,
+        res["valence"],
+        res["facets"]["probs"],  # ← 확률 dict만 전달
+    )
+
     return res
 
 @router.get("/calendar", response_model=List[CalendarDayEmotion])
