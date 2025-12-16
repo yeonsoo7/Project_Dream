@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="당신의 꿈을 바탕으로 만든 이미지예요"
+            android:textSize="18sp" android:layout_marginBottom="12dp"/>
+
+        <!-- ✅ 이미지 + 로딩을 겹치기 위해 FrameLayout 사용 -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="220dp">
+
+            <!-- ✅ 결과 이미지 -->
+            <ImageView
+                android:id="@+id/imgResult"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:background="@color/cloud_blue" />
+
+            <!-- ✅ 로딩 표시 (중앙) -->
+            <ProgressBar
+                android:id="@+id/progress"
+                style="?android:attr/progressBarStyleLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:layout_gravity="center" />
+        </FrameLayout>
+
+        <!-- 입력 텍스트 표시 (원하면 유지) -->
+        <TextView
+            android:id="@+id/tvDreamText"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="12dp" android:textSize="16sp"/>
+
+        <!-- 감정 분석 보기 버튼 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAnalyze"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="감정 분석 보기"
+            android:textAllCaps="false"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="@color/dream_purple"
+            android:textColor="@android:color/white"
+            app:cornerRadius="24dp"/>
+
+    </LinearLayout>
+</ScrollView>

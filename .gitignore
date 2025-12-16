@@ -36,3 +36,13 @@ generated/
 # ---- Local DB files ----
 backend/app.db
 backend/fastapi_app/app.db
+
+# Android studio / Gradle
+**/*.iml
+**/.idea/
+**/.gradle/
+**/local.properties
+**/build/
+**/.cxx/
+**/.externalNativeBuild/
+**/captures/

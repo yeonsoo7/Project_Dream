@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 개발 중: 로컬 HTTP 허용 -->
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- 에뮬레이터에서 PC를 가리키는 주소 -->
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <!-- (선택) 같은 와이파이에서 PC의 로컬 IP도 허용하고 싶으면 추가 -->
+        <domain includeSubdomains="true">192.168.0.0</domain>
+        <domain includeSubdomains="true">192.168.1.0</domain>
+    </domain-config>
+</network-security-config>

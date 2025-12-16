@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginVertical="6dp"
+    card_view:cardCornerRadius="8dp"
+    card_view:cardUseCompatPadding="true">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/tvDreamText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="꿈 내용 예시"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/tvValence"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="긍/부정: P=0.75 / N=0.25"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/tvNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="감정 분석 노트"
+            android:textSize="13sp"
+            android:textColor="#666666" />
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/splashFragment">
+
+    <fragment
+        android:id="@+id/splashFragment"
+        android:name="com.dreamapp.yeonsoo.SplashFragment"
+        android:label="fragment_splash"
+        tools:layout="@layout/fragment_splash" >
+        <action
+            android:id="@+id/action_splashFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.dreamapp.yeonsoo.HomeFragment"
+        android:label="fragment_home"
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_homeFragment_to_imageResultFragment"
+            app:destination="@id/imageResultFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_emotionCalendarFragment"
+            app:destination="@id/emotionCalendarFragment" />
+
+    </fragment>
+    <fragment
+        android:id="@+id/imageResultFragment"
+        android:name="com.dreamapp.yeonsoo.ImageResultFragment"
+        android:label="ImageResultFragment" />
+    <fragment
+        android:id="@+id/emotionResultFragment"
+        android:name="com.dreamapp.yeonsoo.EmotionResultFragment"
+        android:label="감정 분석 결과"
+        tools:layout="@layout/fragment_emotion_result" />
+    <fragment
+        android:id="@+id/emotionCalendarFragment"
+        android:name="com.dreamapp.yeonsoo.EmotionCalendarFragment"
+        android:label="감정 캘린더"
+        tools:layout="@layout/fragment_emotion_calendar" />
+
+
+</navigation>

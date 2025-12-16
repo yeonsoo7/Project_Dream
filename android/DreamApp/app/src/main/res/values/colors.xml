@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="dream_pink2">#E3A7FF</color>
+    <color name="dream_pink">#FAE3FF</color>
+    <color name="dream_purple">#CBC3E3</color>
+    <color name="cloud_blue">#00B7FF</color>
+    <color name="card_bg">#E8F0FE</color>
+    <color name="text_dark">#222222</color>
+</resources>
